@@ -62,14 +62,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     if not TELEGRAM_TOKEN or not GROK_API_KEY:
-        print("❌ Credentials missing")
+        print("✖ Credentials missing")
         return
+
+    # === DEBUG PRINTS ===
+    print(f"TELEGRAM_TOKEN loaded: {'Yes' if TELEGRAM_TOKEN else 'No'}")
+    print(f"GROK_API_KEY loaded: {'Yes' if GROK_API_KEY else 'No'}")
+    # =====================
+
     app = Application.builder().token(TELEGRAM_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("clear", clear_history))
-    app.add_handler(messagehandler(filters.text & ~filter.command, handle_message))
-    print("🚀 JARVIS RUNNING...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.add_handler(MessageHandler(filters.TEXT & \~filters.COMMAND, handle_message))
 
-if __name__ == "__main__":
-    main()
+    print("🚀 JARVIS RUNNING...")
+
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
