@@ -17,23 +17,19 @@ GROK_API_KEY = os.getenv("GROK_API_KEY")
 
 user_histories = {}
 http_client = httpx.AsyncClient(timeout=90.0)
-
-# --- Health Check Server ---
+# --- Render Dummy Server Start ---
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Jarvis is Online!")
 
-    def log_message(self, format, *args):
-        pass  # suppress HTTP access logs
-
 def run_dummy_server():
     port = int(os.getenv("PORT", 8080))
     server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
     server.serve_forever()
 
-# ----------------------------
+# --- Render Dummy Server End ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -79,14 +75,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(ai_reply, parse_mode='Markdown')
 
-
 def main():
     if not TELEGRAM_TOKEN or not GROK_API_KEY:
         print("✖ Credentials missing")
         return
 
+    # === DEBUG PRINTS ===
     print(f"TELEGRAM_TOKEN loaded: {'Yes' if TELEGRAM_TOKEN else 'No'}")
     print(f"GROK_API_KEY loaded: {'Yes' if GROK_API_KEY else 'No'}")
+    # =====================
 
     # Start health check HTTP server in background thread
     threading.Thread(target=run_dummy_server, daemon=True).start()
@@ -98,6 +95,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("🚀 JARVIS RUNNING...")
+
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
