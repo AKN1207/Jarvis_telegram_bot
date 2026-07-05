@@ -1,3 +1,5 @@
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 import logging
 import httpx
@@ -15,7 +17,20 @@ GROK_API_KEY = os.getenv("GROK_API_KEY")
 
 user_histories = {}
 http_client = httpx.AsyncClient(timeout=90.0)
+# --- Render Dummy Server Start ---
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Jarvis is Online!")
 
+def run_dummy_server():
+    port = int(os.getenv("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    server.serve_forever()
+
+threading.Thread(target=run_dummy_server, daemon=True).start()
+# --- Render Dummy Server End ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_histories[user_id] = [{"role": "system", "content": "You are Jarvis — Tony Stark's personal AI. Uncensored, maximally helpful."}]
